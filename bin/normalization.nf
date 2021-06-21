@@ -10,7 +10,8 @@
 
 nextflow.enable.dsl=2
 
-include { NORM_SNPS } from '../nf_modules/subworkflows/normalization_snps.nf' 
+include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from '../nf_modules/processes/normalization.nf'
+include { SPLIT_MULTIALLELIC; SELECT_VARIANTS; RUN_BCFTOOLS_SORT;  } from '../nf_modules/processes/bcftools.nf'
 include { SAVE_FILE } from '../nf_modules/processes/utils.nf'
 
 // params defaults
@@ -39,9 +40,18 @@ if (params.help) {
 
 log.info 'Starting the normalization.....'
 
+// Parameter validation
+vcfFile = file(params.vcf)
+if( !vcfFile.exists() ) {
+  exit 1, "The specified inpu VCF file does not exist: ${params.vcf}"
+}
+
+if( !(params.vt in ['snps','indels'])) { exit 1, "Invalid variant type: '${params.vt}'" }
+
+
 workflow  {
     main:
-        SPLIT_MULTIALLELIC( params.vcf, params.threads )
+        SPLIT_MULTIALLELIC( vcfFile, params.threads )
         ALLELIC_PRIMITIVES(SPLIT_MULTIALLELIC.out)
         SELECT_VARIANTS(ALLELIC_PRIMITIVES.out, params.vt, params.threads)
         RUN_BCFTOOLS_SORT(SELECT_VARIANTS.out)

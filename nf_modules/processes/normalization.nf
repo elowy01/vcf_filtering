@@ -27,7 +27,7 @@ process ALLELIC_PRIMITIVES {
 
         """
         tabix -f $vcf
-        vcfallelicprimitives -k -g $vcf |bgzip -c > out.decomp.vcf.gz
+        vcflib vcfallelicprimitives -k -g $vcf |bgzip -c > out.decomp.vcf.gz
         """
 }
 
