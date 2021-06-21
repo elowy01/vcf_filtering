@@ -10,8 +10,8 @@
 
 nextflow.enable.dsl=2
 
-include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from '../nf_modules/processes/normalization.nf'
-include { SPLIT_MULTIALLELIC; SELECT_VARIANTS; RUN_BCFTOOLS_SORT;  } from '../nf_modules/processes/bcftools.nf'
+include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from '../../nf_modules/processes/normalization.nf'
+include { SPLIT_MULTIALLELIC; SELECT_VARIANTS; RUN_BCFTOOLS_SORT;  } from '../../nf_modules/processes/bcftools.nf'
 include { SAVE_FILE } from '../nf_modules/processes/utils.nf'
 
 // params defaults
