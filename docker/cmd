@@ -1,0 +1,3 @@
+docker build - -t classifier_filtering < classifier_filtering.Dockerfile
+
+docker run --rm -it --name=classifier_filtering classifier_filtering
