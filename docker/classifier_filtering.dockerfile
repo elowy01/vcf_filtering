@@ -14,17 +14,22 @@ RUN apt-get update && \
 				   libhts-dev  \
                    libvcflib-tools \
 				   libvcflib-dev \
-				   python3 \
-				   python3-pip \
+				   libffi-dev \
 				   libcurl4-openssl-dev \
 				   libssl-dev \
                    tabix \
+				   wget \
 				   && apt-get clean
 				   
 WORKDIR tmp/
 
 #prepare Python
-RUN ln -s /usr/bin/python3 /usr/bin/python
+WORKDIR /TMP/python
+RUN wget https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz && tar xzvf Python-3.7.0.tgz
+WORKDIR Python-3.7.0
+RUN ./configure && make && make install
+RUN ln -s /usr/local/bin/python3.7 /usr/bin/python && ln -s /usr/local/bin/pip3.7 /usr/bin/pip
+RUN rm -rf /TMP/python/
 
 # install BCFTools
 RUN git clone --recurse-submodules git://github.com/samtools/htslib.git && git clone git://github.com/samtools/bcftools.git
@@ -32,12 +37,6 @@ WORKDIR bcftools
 RUN make && make install
 WORKDIR /tmp/
 RUN rm -rf htslib && rm -rf bcftools
-
-#install igsr-analysis libraries
-WORKDIR /lib
-RUN git clone https://github.com/igsr/igsr_analysis.git
-ENV PYTHONPATH=/lib/igsr_analysis
-ENV PATH=/bin/:/lib/igsr_analysis/scripts/VCF/QC/:${PATH}
 
 #install vt
 WORKDIR /tmp/
@@ -49,4 +48,8 @@ RUN cp vt /bin/
 RUN rm -r /tmp/vt
 WORKDIR /root/
 
-RUN pip install pandas sklearn
+#install igsr-analysis libraries
+RUN pip install igsr_analysis
+
+#install Python libraries
+RUN pip install pandas && pip install scikit-learn==0.20.3
