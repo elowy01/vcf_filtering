@@ -17,7 +17,6 @@ include { BCFT_QUERY as BCFT_QUERY_TP} from "${params.NF_MODULES}/processes/bcft
 include { BCFT_QUERY as BCFT_QUERY_FP} from "${params.NF_MODULES}/processes/bcftools.nf"
 include { TRAIN_MODULE } from "../nf_modules/processes/filter_modules.nf"
 
-
 // params defaults
 params.help = false
 params.threads = 1

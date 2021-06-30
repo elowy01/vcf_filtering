@@ -60,3 +60,31 @@ process RFE {
                     outreport="selected_feats.txt")
     """
 }
+
+process MODIFY_HEADER {
+    /*
+    Process to modify the header of the unfiltered VCF
+
+    Parameters
+    ----------
+    header.txt : old header that will be modified
+    */
+    input:
+    path header_f
+
+    output:
+    path 'newheader.txt'
+
+     """
+    #!/usr/bin/env python
+
+    from VCF.VcfUtils import VcfUtils
+
+    vcf_object=VcfUtils(vcf='${params.vcf}')
+
+    vcf_object.add_to_header(header_f='${header_f}', outfilename='newheader1.txt',
+                                 line_ann='##FILTER=<ID=MLFILT,Description="Binary classifier filter">')
+    vcf_object.add_to_header(header_f='newheader1.txt', outfilename='newheader.txt',
+                            line_ann='##INFO=<ID=prob_TP,Number=1,Type=Float,Description="Probability of being a True positive">')
+    """
+}
