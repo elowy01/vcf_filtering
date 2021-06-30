@@ -332,7 +332,7 @@ process train_model {
         """
 }
  
-process rfe {
+        process rfe {
         /*
         Process to do Recursive Feature Elimination in order to
         select the annotations that are more relevant for prediction'
@@ -367,7 +367,7 @@ process rfe {
                         n_features='${params.no_features}',
                         outreport="selected_feats.txt")
         """
-}
+        }
 
 process split_multiallelic_chr {
         /*

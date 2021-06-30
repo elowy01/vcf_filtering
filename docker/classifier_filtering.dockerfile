@@ -4,6 +4,13 @@ FROM ubuntu:latest
 LABEL maintainer="ernestolowy@gmail.com"
 LABEL description="Dockerfile used to build an image used in genomic variant filtering.The filtering used is based on a supervised logistic regression classifier" 
 
+ARG USER_ID
+ARG GROUP_ID
+
+RUN addgroup --gid $GROUP_ID user
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+USER root
+
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -qq install git \
     				   build-essential \
@@ -20,7 +27,8 @@ RUN apt-get update && \
                    tabix \
 				   wget \
 				   && apt-get clean
-				   
+
+
 WORKDIR tmp/
 
 #prepare Python
@@ -46,10 +54,12 @@ RUN git submodule update --init --recursive
 RUN make
 RUN cp vt /bin/
 RUN rm -r /tmp/vt
-WORKDIR /root/
 
 #install igsr-analysis libraries
 RUN pip install igsr_analysis
 
 #install Python libraries
 RUN pip install pandas && pip install scikit-learn==0.20.3
+
+USER user
+WORKDIR user/
