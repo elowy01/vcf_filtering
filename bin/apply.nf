@@ -9,10 +9,13 @@
  */
 
  nextflow.enable.dsl=2
- include { GET_HEADER; SELECT_REGION; REHEADER; SPLIT_MULTIALLELIC} from "${params.NF_MODULES}/processes/bcftools.nf"
+ include { GET_HEADER; SELECT_REGION; REHEADER; SPLIT_MULTIALLELIC; RUN_BCFTOOLS_SORT; EXC_NON_VTS; DROP_GTPS } from "${params.NF_MODULES}/processes/bcftools.nf"
+ include { SELECT_VARIANTS as SELECT_SNPS} from "${params.NF_MODULES}/processes/bcftools.nf"
+ include { SELECT_VARIANTS as SELECT_INDELS} from "${params.NF_MODULES}/processes/bcftools.nf"
+ include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from "${params.NF_MODULES}/processes/normalization.nf"
+ include { RUN_TABIX } from "${params.NF_MODULES}/processes/utils.nf"
  include { MODIFY_HEADER } from "../nf_modules/processes/filter_modules.nf"
  
-
 // params defaults
 params.help = false
 params.threads = 1
@@ -47,11 +50,37 @@ if( !vcfFile.exists() ) {
   exit 1, "The specified input VCF file does not exist: ${params.vcf}"
 }
 
+workflow normalization {
+  /*
+  This subworkflow will do the following:
+  1) Normalize the VCF
+  2) Split the normalized VCF into 2 VCF files (with SNPs and INDELs respectively)
+  3) Remove the genotypes from either the SNP or INDEL vcf depending on params.vt
+  */
+
+  take: vcf
+  main:
+    SPLIT_MULTIALLELIC(vcf, params.threads )
+    ALLELIC_PRIMITIVES(SPLIT_MULTIALLELIC.out)
+    RUN_BCFTOOLS_SORT(ALLELIC_PRIMITIVES.out)
+    SELECT_SNPS(RUN_BCFTOOLS_SORT.out, 'snps', params.threads)
+    SELECT_INDELS(RUN_BCFTOOLS_SORT.out, 'indels', params.threads)
+    DROP_GTPS(RUN_BCFTOOLS_SORT.out, params.vt, params.threads)
+    RUN_VT_UNIQ(DROP_GTPS.out)
+  emit:
+    norm_no_gtps = RUN_VT_UNIQ.out
+    norm_snps = SELECT_SNPS.out
+    norm_indels = SELECT_INDELS.out
+
+}
+
 workflow  {
-    main:
-        GET_HEADER(vcfFile)
-        MODIFY_HEADER(GET_HEADER.out)
-        SELECT_REGION(vcfFile, params.chr)
-        REHEADER(MODIFY_HEADER.out, SELECT_REGION.out)
-        SPLIT_MULTIALLELIC(REHEADER.out, params.threads )
+  main:
+    RUN_TABIX(vcfFile)
+    GET_HEADER(vcfFile)
+    MODIFY_HEADER(GET_HEADER.out)
+    SELECT_REGION(vcfFile, RUN_TABIX.out, params.chr)
+    REHEADER(MODIFY_HEADER.out, SELECT_REGION.out)
+    normalization(REHEADER.out)
+    EXC_NON_VTS(normalization.out.norm_no_gtps, params.threads)
 }
