@@ -77,6 +77,6 @@ workflow  {
         BCFT_QUERY_TP(INTERSECTION_CALLSET.out.tp_vcf, params.annotations)
         BCFT_QUERY_FP(INTERSECTION_CALLSET.out.fp_vcf, params.annotations)
         TRAIN_MODULE(BCFT_QUERY_TP.out, BCFT_QUERY_FP.out)
-        SAVE_MODEL(TRAIN_MODULE.out.trained_model, params.outdir, "${params.outprefix}.sav", 'move')
-        SAVE_MODEL_SCORE(TRAIN_MODULE.out.trained_model_score, params.outdir, "${params.outprefix}.score", 'move')
+        SAVE_MODEL(TRAIN_MODULE.out.trained_model, params.outdir, "${params.outprefix}.sav", 'copy')
+        SAVE_MODEL_SCORE(TRAIN_MODULE.out.trained_model_score, params.outdir, "${params.outprefix}.score", 'copy')
 }

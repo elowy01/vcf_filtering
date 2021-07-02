@@ -9,12 +9,12 @@
  */
 
  nextflow.enable.dsl=2
- include { GET_HEADER; SELECT_REGION; REHEADER; SPLIT_MULTIALLELIC; RUN_BCFTOOLS_SORT; EXC_NON_VTS; DROP_GTPS } from "${params.NF_MODULES}/processes/bcftools.nf"
+ include { GET_HEADER; SELECT_REGION; REHEADER; SPLIT_MULTIALLELIC; RUN_BCFTOOLS_SORT; EXC_NON_VTS; DROP_GTPS; BCFT_QUERY } from "${params.NF_MODULES}/processes/bcftools.nf"
  include { SELECT_VARIANTS as SELECT_SNPS} from "${params.NF_MODULES}/processes/bcftools.nf"
  include { SELECT_VARIANTS as SELECT_INDELS} from "${params.NF_MODULES}/processes/bcftools.nf"
  include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from "${params.NF_MODULES}/processes/normalization.nf"
  include { RUN_TABIX } from "${params.NF_MODULES}/processes/utils.nf"
- include { MODIFY_HEADER } from "../nf_modules/processes/filter_modules.nf"
+ include { MODIFY_HEADER; APPLY_MODEL } from "../nf_modules/processes/filter_modules.nf"
  
 // params defaults
 params.help = false
@@ -34,7 +34,7 @@ if (params.help) {
     log.info '	--help	Show this message and exit.'
     log.info '	--vcf VCF    Path to the VCF file that will be filtered.'
     log.info '  --model FILE Path to serialized ML fitted model.'
-    log.info '  --cutoff FLOAT/FLOATs Cutoff value used in the filtering. It also accepts comma-separated list of floats: 0.95,0.96'
+    log.info '  --cutoff FLOAT Cutoff value used in the filtering. i.e.: 0.95.'
     log.info '  --annotations ANNOTATION_STRING String containing the annotations to filter, for example:'
     log.info '    %CHROM\t%POS\t%INFO/DP\t%INFO/RPB\t%INFO/MQB\t%INFO/BQB\t%INFO/MQSB\t%INFO/SGB\t%INFO/MQ0F\t%INFO/ICB\t%INFO/HOB\t%INFO/MQ\n.'
     log.info '  --chr chr1   Chromosome to be analyzed'
@@ -50,7 +50,7 @@ if( !vcfFile.exists() ) {
   exit 1, "The specified input VCF file does not exist: ${params.vcf}"
 }
 
-workflow normalization {
+workflow NORMALIZATION {
   /*
   This subworkflow will do the following:
   1) Normalize the VCF
@@ -74,6 +74,16 @@ workflow normalization {
 
 }
 
+workflow APPLY_MODEL_WF {
+  /*
+  This subworkflow is used to apply the fitted model on the VCF
+  */
+  take: annotations
+  main:
+    APPLY_MODEL(annotations, params.model, params.cutoff )
+}
+
+
 workflow  {
   main:
     RUN_TABIX(vcfFile)
@@ -81,6 +91,9 @@ workflow  {
     MODIFY_HEADER(GET_HEADER.out)
     SELECT_REGION(vcfFile, RUN_TABIX.out, params.chr)
     REHEADER(MODIFY_HEADER.out, SELECT_REGION.out)
-    normalization(REHEADER.out)
-    EXC_NON_VTS(normalization.out.norm_no_gtps, params.threads)
+    NORMALIZATION(REHEADER.out)
+    EXC_NON_VTS(NORMALIZATION.out.norm_no_gtps, params.threads)
+    BCFT_QUERY(EXC_NON_VTS.out, params.annotations)
+    APPLY_MODEL_WF(BCFT_QUERY.out)
+
 }
