@@ -14,7 +14,7 @@
  include { SELECT_VARIANTS as SELECT_INDELS} from "${params.NF_MODULES}/processes/bcftools.nf"
  include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from "${params.NF_MODULES}/processes/normalization.nf"
  include { RUN_TABIX } from "${params.NF_MODULES}/processes/utils.nf"
- include { MODIFY_HEADER; APPLY_MODEL } from "../nf_modules/processes/filter_modules.nf"
+ include { MODIFY_HEADER; APPLY_MODEL; COMPRESS_PREDICTIONS } from "../nf_modules/processes/filter_modules.nf"
  
 // params defaults
 params.help = false
