@@ -4,13 +4,6 @@ FROM ubuntu:latest
 LABEL maintainer="ernestolowy@gmail.com"
 LABEL description="Dockerfile used to build an image used in genomic variant filtering.The filtering used is based on a supervised logistic regression classifier" 
 
-ARG USER_ID
-ARG GROUP_ID
-
-RUN addgroup --gid $GROUP_ID user
-RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
-USER root
-
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -qq install git \
     				   build-essential \
@@ -32,12 +25,12 @@ RUN apt-get update && \
 WORKDIR tmp/
 
 #prepare Python
-WORKDIR /TMP/python
+WORKDIR /tmp/python
 RUN wget https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz && tar xzvf Python-3.7.0.tgz
 WORKDIR Python-3.7.0
 RUN ./configure && make && make install
 RUN ln -s /usr/local/bin/python3.7 /usr/bin/python && ln -s /usr/local/bin/pip3.7 /usr/bin/pip
-RUN rm -rf /TMP/python/
+RUN rm -rf /tmp/python/
 
 # install BCFTools
 RUN git clone --recurse-submodules git://github.com/samtools/htslib.git && git clone git://github.com/samtools/bcftools.git
@@ -60,6 +53,3 @@ RUN pip install igsr_analysis
 
 #install Python libraries
 RUN pip install pandas && pip install scikit-learn==0.20.3
-
-USER user
-WORKDIR user/
