@@ -9,16 +9,16 @@
  */
 
 nextflow.enable.dsl=2
-include { GET_HEADER; SELECT_REGION; REHEADER; SPLIT_MULTIALLELIC; RUN_BCFTOOLS_SORT} from "${params.NF_MODULES}/processes/bcftools.nf"
-include { BCFT_ANNOTATE } from "${params.NF_MODULES}/processes/bcftools.nf"
-include { EXC_NON_VTS; DROP_GTPS; BCFT_QUERY } from "${params.NF_MODULES}/processes/bcftools.nf"
-include { SELECT_VARIANTS as SELECT_SNPS} from "${params.NF_MODULES}/processes/bcftools.nf"
-include { SELECT_VARIANTS as SELECT_INDELS} from "${params.NF_MODULES}/processes/bcftools.nf"
-include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from "${params.NF_MODULES}/processes/normalization.nf"
-include { RUN_TABIX } from "${params.NF_MODULES}/processes/utils.nf"
+include { GET_HEADER; SELECT_REGION; REHEADER; SPLIT_MULTIALLELIC; RUN_BCFTOOLS_SORT} from "../nf_modules/processes/bcftools.nf"
+include { BCFT_ANNOTATE } from "../nf_modules/processes/bcftools.nf"
+include { EXC_NON_VTS; DROP_GTPS; BCFT_QUERY } from "../nf_modules/processes/bcftools.nf"
+include { SELECT_VARIANTS as SELECT_SNPS} from "../nf_modules/processes/bcftools.nf"
+include { SELECT_VARIANTS as SELECT_INDELS} from "../nf_modules/processes/bcftools.nf"
+include { ALLELIC_PRIMITIVES; RUN_VT_UNIQ } from "../nf_modules/processes/normalization.nf"
+include { RUN_TABIX } from "../nf_modules/processes/utils.nf"
 include { MODIFY_HEADER; APPLY_MODEL; COMPRESS_PREDICTIONS } from "../nf_modules/processes/filter_modules.nf"
-include { SAVE_FILE as SAVE_VCF} from "${params.NF_MODULES}/processes/utils.nf"
-include { SAVE_FILE as SAVE_VCF_IX} from "${params.NF_MODULES}/processes/utils.nf"
+include { SAVE_FILE as SAVE_VCF} from "../nf_modules/processes/utils.nf"
+include { SAVE_FILE as SAVE_VCF_IX} from "../nf_modules/processes/utils.nf"
  
 // params defaults
 params.help = false
@@ -33,19 +33,21 @@ if (params.help) {
     log.info '-----------------------------------------------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow apply.nf --vcf VCF --model MODEL.sav --cutoff 0.95 --vt snps'
+    log.info '    nextflow apply.nf --vcf VCF --model MODEL.sav --cutoff 0.95 --annotations \'%CHROM\t%POS\t%INFO/DP\t%INFO/FS\n\' --vt snps --chr chr20 --outprefix out'
     log.info ''
     log.info 'Options:'
     log.info '	--help	Show this message and exit.'
     log.info '	--vcf VCF    Path to the VCF file that will be filtered.'
     log.info '  --model FILE Path to serialized ML fitted model.'
-    log.info '  --cutoff FLOAT Cutoff value used in the filtering. i.e.: 0.95.'
-    log.info '  --annotations ANNOTATION_STRING String containing the annotations to filter, for example:'
+    log.info '  --cutoff FLOAT Sensitivity cutoff value used in the filtering. i.e.: 0.95.'
+    log.info '  --annotations ANNOTATION_STRING String containing the annotations that were used for training the model, for example:'
     log.info '    %CHROM\t%POS\t%INFO/DP\t%INFO/RPB\t%INFO/MQB\t%INFO/BQB\t%INFO/MQSB\t%INFO/SGB\t%INFO/MQ0F\t%INFO/ICB\t%INFO/HOB\t%INFO/MQ\n.'
     log.info '  --chr chr1   Chromosome to be analyzed'
-    log.info '  --vt  VARIANT_TYPE   Type of variant to filter. Poss1ible values are 'snps'/'indels'.'
-    log.info '  --outdir OUTDIR   Name for directory for saving the output files of this pipeline. Default: results/'
+    log.info '  --vt  VARIANT_TYPE   Type of variant to filter. Poss1ible values are \'snps\'/\'indels\'.'
     log.info '  --outprefix OUTPREFIX Output filename.'
+    log.info '  --outdir OUTDIR   Name for directory for saving the output files of this pipeline. Default: results/'
+    log.info '  --tmpdir TMPDIR   Name of temp directory used to store the temporary files. Default: /tmp/'
+    log.info '  --threads INT   Number of CPUs to use. Default: 1.'
     log.info ''
     exit 1
 }
@@ -106,7 +108,7 @@ workflow  {
     RUN_TABIX(vcfFile)
     GET_HEADER(vcfFile)
     MODIFY_HEADER(GET_HEADER.out)
-    SELECT_REGION(vcfFile, RUN_TABIX.out, params.chr)
+    SELECT_REGION(vcfFile, RUN_TABIX.out, params.chr, params.threads)
     REHEADER(MODIFY_HEADER.out, SELECT_REGION.out)
     NORMALIZATION(REHEADER.out)
     EXC_NON_VTS(NORMALIZATION.out.norm_no_gtps, params.threads)

@@ -129,6 +129,8 @@ process MODIFY_HEADER {
     ----------
     header.txt : old header that will be modified
     */
+    executor 'local'
+
     input:
     path header_f
 
