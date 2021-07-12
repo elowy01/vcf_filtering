@@ -18,7 +18,7 @@ process TRAIN_MODULE {
     """
     #!/usr/bin/env python
 
-    from VCF.VCFfilter.MLclassifier import MLclassifier
+    from MLclassifier import MLclassifier
 
     ML_obj=MLclassifier()
 
@@ -53,7 +53,7 @@ process APPLY_MODEL {
     """
 	#!/usr/bin/env python
 
-	from VCF.VCFfilter.MLclassifier import MLclassifier
+	from MLclassifier import MLclassifier
 
 	ML_obj=MLclassifier(fitted_model = '${model}')
 
@@ -109,7 +109,7 @@ process RFE {
 
     """
     #!/usr/bin/env python
-    from VCF.VCFfilter.MLclassifier import MLclassifier
+    from MLclassifier import MLclassifier
 
     ML_obj=MLclassifier()
 
@@ -140,7 +140,7 @@ process MODIFY_HEADER {
      """
     #!/usr/bin/env python
 
-    from VCF.VcfUtils import VcfUtils
+    from VcfUtils import VcfUtils
 
     vcf_object=VcfUtils(vcf='${params.vcf}')
 
