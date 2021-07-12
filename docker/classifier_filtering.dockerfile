@@ -48,8 +48,11 @@ RUN make
 RUN cp vt /bin/
 RUN rm -r /tmp/vt
 
-#install igsr-analysis libraries
-RUN pip install igsr_analysis
+#get the vcf_filtering repo
+WORKDIR /lib/
+RUN wget https://github.com/elowy01/vcf_filtering/archive/refs/tags/v1.0.1.tar.gz && tar -xvf v1.0.1.tar.gz
+ENV PYTHONPATH=/lib/vcf_filtering-1.0.1/src/
+
 
 #install Python libraries
 RUN pip install pandas && pip install scikit-learn==0.20.3
