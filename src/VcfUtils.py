@@ -9,7 +9,7 @@ import subprocess
 import gzip
 import re
 from collections import namedtuple
-from Utils.RunProgram import RunProgram
+from RunProgram import RunProgram
 
 class VcfUtils(object):
     """
