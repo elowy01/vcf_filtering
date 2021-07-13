@@ -50,8 +50,8 @@ RUN rm -r /tmp/vt
 
 #get the vcf_filtering repo
 WORKDIR /lib/
-RUN wget https://github.com/elowy01/vcf_filtering/archive/refs/tags/v1.0.1.tar.gz && tar -xvf v1.0.1.tar.gz
-ENV PYTHONPATH=/lib/vcf_filtering-1.0.1/src/
+RUN wget https://github.com/elowy01/vcf_filtering/archive/refs/tags/v1.0.2.tar.gz && tar -xvf v1.0.2.tar.gz
+ENV PYTHONPATH=/lib/vcf_filtering-1.0.2/src/
 
 
 #install Python libraries
