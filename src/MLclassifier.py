@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import Imputer
 from sklearn.feature_selection import RFE
+from collections import Counter
 
 class MLclassifier:
     """
@@ -122,27 +123,35 @@ class MLclassifier:
             if i is None:
                 continue
             elms = i.split('=')
-            ids.append(elms[0])
-        new_ids = list(set(ids))
-        return new_ids[0]
+            ids.append(elms[0]) 
+        ct = Counter(ids)
+        sort_ct = sorted(ct.items(), key=lambda x: x[1], reverse=True)
+        return sort_ct[0][0]
     
-    def __get_values(self, x):
-        values = []
-        for i in x:
-            if i is None:
-                values.append(0)
+    def __get_values(self, x, ids):
+        adict={}
+        for elem in x:
+            if elem is None:
                 continue
-            elms = i.split('=')
-            if len(elms)==1:
+            bits = elem.split('=')
+            if len(bits)==1:
                 # value is of FLAG type
-                values.append(1)
+                adict[elem]=0
             else:
                 try:
-                    float(elms[1])
+                    float(bits[1])
                 except:
-                    values.append(0)
+                    adict[bits[0]]=0
                 else:
-                    values.append(elms[1])
+                    adict[bits[0]]=bits[1]
+
+        values = []
+        for i in ids:
+            if i in adict:
+                values.append(adict[i])
+            else:
+                values.append(np.nan)
+
         return values
 
     def __process_dfINFO(self, annotations):
@@ -165,8 +174,8 @@ class MLclassifier:
         DF.rename(columns={"[3](null)":"INFO"},inplace=True)
         DF = DF.INFO.str.split(";",expand=True,)
         ids=DF.apply(self.__get_ids)
-        DF.columns=ids
-        new_DF=DF.apply(self.__get_values)
+        new_DF=DF.apply(self.__get_values, args=(list(ids),), axis=1, result_type='broadcast')
+        new_DF.columns=ids
         return new_DF
 
     def train(self, tp_annotations, fp_annotations, outprefix, test_size=0.25):
