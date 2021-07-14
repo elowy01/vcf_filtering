@@ -50,9 +50,8 @@ RUN rm -r /tmp/vt
 
 #get the vcf_filtering repo
 WORKDIR /lib/
-RUN wget https://github.com/elowy01/vcf_filtering/archive/refs/tags/v1.0.2.tar.gz && tar -xvf v1.0.2.tar.gz
-ENV PYTHONPATH=/lib/vcf_filtering-1.0.2/src/
-
+RUN wget https://github.com/elowy01/vcf_filtering/archive/refs/tags/v1.0.4.tar.gz && tar -xvf v1.0.4.tar.gz
+ENV PYTHONPATH=/lib/vcf_filtering-1.0.4/src/
 
 #install Python libraries
 RUN pip install pandas && pip install scikit-learn==0.20.3
