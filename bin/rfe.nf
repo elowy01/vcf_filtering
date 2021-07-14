@@ -38,6 +38,8 @@ if (params.help) {
     log.info '	--vcf VCF    Path to the VCF file.'
     log.info '  --vt  VARIANT_TYPE   Type of variant used in the analysis. Poss1ible values are \'snps\'/\'indels\'/\'both\'.'
     log.info '  --true_cs VCF  Path to the gold-standard VCF file.'
+    log.info '  --annotations ANNOTATION_STRING	String containing the annotation profile between which the desired number of features will be selected, for example:'
+    log.info '	%CHROM\t%POS\t%INFO/DP\t%INFO/RPB\t%INFO/MQB\t%INFO/BQB\t%INFO/MQSB\t%INFO/SGB\t%INFO/MQ0F\t%INFO/ICB\t%INFO/HOB\t%INFO/MQ\n.'
     log.info '  --no_feats INT  Number of features (variant annotations) to be selected using RFE.'
     log.info '  --outdir OUTDIR   Name of the directory used for saving the output files of this pipeline. Default: results/'
     log.info '  --outfile OUTFILE Output filename.'
@@ -76,8 +78,8 @@ workflow  {
         RUN_VT_UNIQ(RUN_BCFTOOLS_SORT.out)
         EXC_NON_VTS(RUN_VT_UNIQ.out, params.threads)
         INTERSECTION_CALLSET(EXC_NON_VTS.out, params.vt, true_vcf, true_vcf_ix)
-        BCFT_QUERY_TP(INTERSECTION_CALLSET.out.tp_vcf, '%CHROM\t%POS\t%INFO\n')
-        BCFT_QUERY_FP(INTERSECTION_CALLSET.out.fp_vcf, '%CHROM\t%POS\t%INFO\n')
+        BCFT_QUERY_TP(INTERSECTION_CALLSET.out.tp_vcf, params.annotations)
+        BCFT_QUERY_FP(INTERSECTION_CALLSET.out.fp_vcf, params.annotations)
         RFE(BCFT_QUERY_TP.out, BCFT_QUERY_FP.out, params.no_feats)
         SAVE_FILE(RFE.out.sel_feats, params.outdir, params.outfile, 'move')
 }
